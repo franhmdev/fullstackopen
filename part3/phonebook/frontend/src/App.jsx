@@ -90,7 +90,7 @@ const App = () => {
 
   const handleCheckNamePhone = () => {
     var errorMessage = 'ok';
-    console.log(newPhone)
+    // console.log(newPhone)
 
     if(persons.some(person => person.name === newName && person.number === newPhone)) {
       errorMessage = "The contact " + newName + " with phone number " + newPhone + " is already added to phonebook"
@@ -113,12 +113,12 @@ const App = () => {
   }
 
   const handleNameChange = (event) => {
-    console.log(event.target.value)
+    // console.log(event.target.value)
     setNewName(event.target.value)
   } 
 
   const handlePhoneChange = (event) => {
-    console.log(event.target.value)
+    // console.log(event.target.value)
     setNewPhone(event.target.value)
   } 
   const handleSearchChange = (event) => {
@@ -153,7 +153,7 @@ const App = () => {
   }
 
   const filterName = (event) => {
-    console.log(event.target.value)
+    // console.log(event.target.value)
   }
 
   return (
