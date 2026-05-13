@@ -4,10 +4,12 @@ const app = express()
 const morgan = require('morgan')
 const Person = require('./models/person')
 const logger = require('./utils/logger')
+const cors = require('cors')
 
 app.use(express.static('dist'))
 app.use(express.json())
 app.use(morgan('tiny'))
+app.use(cors())
 
 // Token personalizado para el body
 morgan.token('body', (req) => {
@@ -55,13 +57,13 @@ app.get('/api/info', async (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  Person.findById(request.params.id).then(note => {
-    response.json(note)
+  Person.findById(request.params.id).then(person => {
+    response.json(person)
   })
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
-    Note.findByIdAndDelete(request.params.id)
+    Person.findByIdAndDelete(request.params.id)
     .then(result => {
       response.status(204).end()
     })
@@ -76,12 +78,15 @@ app.delete('/api/persons/:id', (request, response, next) => {
 //   return maxId + 1
 // }
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const { name, number } = request.body
+  // if (!name || name.length < 3) {
+  //   return response.status(400).json({ error: 'name must be at least 3 characters' })
+  // }
 
-  if (!name || !number) {
-    return response.status(400).json({ error: 'name or number missing' })
-  }
+  // if (!number || !/^\d{2,3}-\d+$/.test(number)) {
+  //   return response.status(400).json({ error: 'number must be in correct format' })
+  // }
 
   Person.findOne ({ name })
   .then (person => {
@@ -100,6 +105,7 @@ app.post('/api/persons', (request, response) => {
         name : name,
         number : number
       })
+      // if(number)
       newPerson
       .save()
       .then(savedPerson => {
@@ -124,8 +130,12 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError') {
+    console.log('CastError');
     return response.status(400).send({ error: 'malformatted id' })
-  } 
+    
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
 
   next(error)
 }

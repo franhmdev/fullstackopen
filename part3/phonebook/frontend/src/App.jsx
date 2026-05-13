@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import Persons from './components/Persons'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm';
@@ -8,9 +7,9 @@ import personService from './services/person.js'
 import Notification from './components/Notification.jsx';
 
 const App = () => {
-  const [allPersons, setAllPersons] = useState([]);
+  const [allPersons, setAllPersons] = useState([])
 
-  const [persons, setPersons] = useState(allPersons);
+  const [persons, setPersons] = useState([])
 
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
@@ -23,6 +22,7 @@ const App = () => {
     personService
     .getAll()
     .then(initialPersons => {
+      console.log(initialPersons)
       setAllPersons(initialPersons)
       setPersons(initialPersons)
     })
@@ -34,24 +34,28 @@ const App = () => {
     event.preventDefault()
     const personObject = {
       name: newName,
-      phone: newPhone
+      number: newPhone
     }
     if(handleEmptyOk()) {
-      if(handleCheckNamePhone() == 'ok') {
+      const checkNamePhone = handleCheckNamePhone()
+      if(checkNamePhone === 'ok') {
         personService
         .create(personObject)
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson))
-          setAllPersons(persons.concat(returnedPerson))
+          setAllPersons(allPersons.concat(returnedPerson))
           updateNotification('Person ' + newName + ' added to phonebook')
           setNewName('')
           setNewPhone('')
         })
+        .catch(error => {
+          updateNotification(error.response.data.error, 'error')
+        })
         
-      } else if(handleCheckNamePhone() == 'updatePerson') {
+      } else if(checkNamePhone === 'updatePerson') {
         const personObject = {
           name: newName,
-          phone: newPhone
+          number: newPhone
         }
         if(window.confirm('This contact already exists with a different number, do you want to update it?')) {
           const personID = persons.find(person => person.name === newName).id
@@ -65,11 +69,11 @@ const App = () => {
               setNewPhone('')
             })
             .catch(error => {
-              updateNotification('Error: ' + error, 'error')
+              updateNotification(error.response.data.error, 'error')
             })
         }
       } else {
-        updateNotification(handleCheckNamePhone(), 'error')
+        updateNotification(checkNamePhone, 'error')
       }
     } else {
       updateNotification('Some field is not filled', 'error')
@@ -84,25 +88,25 @@ const App = () => {
     }, 5000)
   }
 
-  const handleCheckNamePhone = (event) => {
+  const handleCheckNamePhone = () => {
     var errorMessage = 'ok';
-    console.log('hola')
+    console.log(newPhone)
 
-    if(persons.some(person => person.name === newName && person.phone === newPhone)) {
+    if(persons.some(person => person.name === newName && person.number === newPhone)) {
       errorMessage = "The contact " + newName + " with phone number " + newPhone + " is already added to phonebook"
-    } else if(persons.some(persons => persons.name === newName && persons.phone !== newPhone)) {
+    } else if(persons.some(person => person.name === newName && person.number !== newPhone)) {
       errorMessage = "updatePerson"
-    } else if(persons.some(persons => persons.name === newName)) {
+    } else if(persons.some(person => person.name === newName)) {
       errorMessage = newName + " is already added to phonebook"
-    } else if(persons.some(persons => persons.phone === newPhone)) {
+    } else if(persons.some(person => person.number === newPhone)) {
       errorMessage = newPhone + " is already added to phonebook"
     }
     return errorMessage;
   }
-  const handleEmptyOk = (event) => {
+  const handleEmptyOk = () => {
     var status = true;
 
-    if(newName == '' || newPhone == '') {
+    if(newName === '' || newPhone === '') {
       status = false;
     }
     return status;
